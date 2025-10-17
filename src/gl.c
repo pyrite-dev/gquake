@@ -99,6 +99,9 @@ void D_EndDirectRect (int x, int y, int width, int height)
 
 static void install_grabs(void)
 {
+	MwFocus(opengl);
+	MwHideCursor(opengl);
+	MwGrabPointer(opengl, 1);
 	mouse_active = true;
 }
 
@@ -107,12 +110,20 @@ static void uninstall_grabs(void)
 	if (!win)
 		return;
 
-	/* TODO */
+	MwGrabPointer(opengl, 0);
 
 	mouse_active = false;
 }
 
 static int MilskoToQuakeKey(int key){
+	if(key == MwLLKeyEnter) key = K_ENTER;
+	if(key == MwLLKeyEscape) key = K_ESCAPE;
+	if(key == MwLLKeyBackSpace) key = K_BACKSPACE;
+	if(key == MwLLKeyLeft) key = K_LEFTARROW;
+	if(key == MwLLKeyRight) key = K_RIGHTARROW;
+	if(key == MwLLKeyUp) key = K_UPARROW;
+	if(key == MwLLKeyDown) key = K_DOWNARROW;
+
 	return key;
 }
 
@@ -121,22 +132,21 @@ static int MilskoToQuakeMouse(int btn){
 	if(btn == MwLLMouseLeft) b = 0;
 	if(btn == MwLLMouseMiddle) b = 2;
 	if(btn == MwLLMouseRight) b = 1;
+	if(btn == MwLLMouseWheelUp) return K_MWHEELUP;
+	if(btn == MwLLMouseWheelDown) return K_MWHEELDOWN;
 
 	return K_MOUSE1 + b;
 }
 
-MwPoint mouse;
 void mousemove(MwWidget handle, void* user, void* call) {
 	MwPoint* p = call;
-	int vecX = p->x - mouse.x;
-	int vecY = p->y - mouse.y;
+	int vecX = p->x;
+	int vecY = p->y;
 
 	if (mouse_active) {
 		mx += vecX * 2;
 		my += vecY * 2;
 	}
-
-	mouse = *p;
 }
 
 void key(MwWidget handle, void* user, void* call){
@@ -157,6 +167,17 @@ void mousedown(MwWidget handle, void* user, void* call){
 void mouseup(MwWidget handle, void* user, void* call){
 	MwLLMouse* m = call;
 	Key_Event(MilskoToQuakeMouse(m->button), 0);
+}
+
+void focusin(MwWidget handle, void* user, void* call){
+	if(mouse_active){
+		MwGrabPointer(opengl, 0);
+		MwGrabPointer(opengl, 1);
+	}
+}
+
+void focusout(MwWidget handle, void* user, void* call){
+	MwGrabPointer(opengl, 0);
 }
 
 static void HandleEvents(void)
@@ -406,9 +427,6 @@ void VID_Init(unsigned char *palette)
 
 	mouse_avail = 1;
 
-	mouse.x = 0;
-	mouse.y = 0;
-
 	vid.maxwarpwidth = WARP_WIDTH;
 	vid.maxwarpheight = WARP_HEIGHT;
 	vid.colormap = host_colormap;
@@ -465,6 +483,10 @@ void VID_Init(unsigned char *palette)
 	MwAddUserHandler(opengl, MwNkeyReleaseHandler, keyrelease, NULL);
 	MwAddUserHandler(opengl, MwNmouseDownHandler, mousedown, NULL);
 	MwAddUserHandler(opengl, MwNmouseUpHandler, mouseup, NULL);
+	MwAddUserHandler(opengl, MwNfocusInHandler, focusin, NULL);
+	MwAddUserHandler(opengl, MwNfocusOutHandler, focusout, NULL);
+
+	MwFocus(opengl);
 
 	if(fullscreen){
 		/* todo */
@@ -487,7 +509,7 @@ void VID_Init(unsigned char *palette)
 
 	GL_Init();
 
-	sprintf (gldir, "%s/glquake", com_gamedir);
+	sprintf (gldir, "%s/mwquake", com_gamedir);
 	Sys_mkdir (gldir);
 
 	VID_SetPalette(palette);
