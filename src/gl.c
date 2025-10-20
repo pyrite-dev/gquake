@@ -477,8 +477,8 @@ void VID_Init(unsigned char *palette)
 	NULL);
 	opengl = MwCreateWidget(MwOpenGLClass, "OpenGL", win, 0, 0, width, height);
 
-	sh.min_width = sh.min_width = width;
-	sh.min_height = sh.max_height = height;
+	sh.min_width = sh.max_width = width;
+	sh.min_height = sh.max_height = height + 24;
 	MwVaApply(win,
 		MwNsizeHints, &sh,
 	NULL);
