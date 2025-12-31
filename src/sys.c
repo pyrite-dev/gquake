@@ -118,7 +118,7 @@ static char end2[] =
 void Sys_Quit (void)
 {
 	Host_Shutdown();
-    fcntl (0, F_SETFL, fcntl (0, F_GETFL, 0) & ~FNDELAY);
+    fcntl (0, F_SETFL, fcntl (0, F_GETFL, 0) & ~O_NDELAY);
 #if 0
 	if (registered.value)
 		printf("%s", end2);

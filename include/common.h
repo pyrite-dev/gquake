@@ -24,17 +24,17 @@ typedef unsigned char 		byte;
 #define BYTE_DEFINED 1
 #endif
 
-#undef true
-#undef false
+#undef qtrue
+#undef qfalse
 
-typedef enum {false, true}	qboolean;
+typedef enum {qfalse, qtrue}	qboolean;
 
 //============================================================================
 
 typedef struct sizebuf_s
 {
-	qboolean	allowoverflow;	// if false, do a Sys_Error
-	qboolean	overflowed;		// set to true if the buffer size failed
+	qboolean	allowoverflow;	// if qfalse, do a Sys_Error
+	qboolean	overflowed;		// set to qtrue if the buffer size failed
 	byte	*data;
 	int		maxsize;
 	int		cursize;

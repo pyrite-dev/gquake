@@ -293,7 +293,7 @@ extern	cvar_t		sys_ticrate;
 extern	cvar_t		sys_nostdout;
 extern	cvar_t		developer;
 
-extern	qboolean	host_initialized;		// true if into command execution
+extern	qboolean	host_initialized;		// qtrue if into command execution
 extern	double		host_frametime;
 extern	byte		*host_basepal;
 extern	byte		*host_colormap;

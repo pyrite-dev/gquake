@@ -52,14 +52,14 @@ static qboolean        mouse_active;
 static int   mx, my;
 static int	old_mouse_x, old_mouse_y;
 
-qboolean dgamouse = false;
-qboolean vidmode_ext = false;
+qboolean dgamouse = qfalse;
+qboolean vidmode_ext = qfalse;
 
 static int scr_width, scr_height;
 
 static int default_dotclock_vidmode;
 static int num_vidmodes;
-static qboolean vidmode_active = false;
+static qboolean vidmode_active = qfalse;
 
 /*-----------------------------------------------------------------------*/
 
@@ -84,9 +84,9 @@ void (*qgl3DfxSetPaletteEXT) (GLuint *);
 
 static float vid_gamma = 1.0;
 
-qboolean is8bit = false;
-qboolean isPermedia = false;
-qboolean gl_mtexable = false;
+qboolean is8bit = qfalse;
+qboolean isPermedia = qfalse;
+qboolean gl_mtexable = qfalse;
 
 /*-----------------------------------------------------------------------*/
 void D_BeginDirectRect (int x, int y, byte *pbitmap, int width, int height)
@@ -101,7 +101,7 @@ static void install_grabs(void)
 {
 	MwHideCursor(opengl);
 	MwGrabPointer(opengl, 1);
-	mouse_active = true;
+	mouse_active = qtrue;
 }
 
 static void uninstall_grabs(void)
@@ -111,7 +111,7 @@ static void uninstall_grabs(void)
 
 	MwGrabPointer(opengl, 0);
 
-	mouse_active = false;
+	mouse_active = qfalse;
 }
 
 static int MilskoToQuakeKey(int key){
@@ -190,7 +190,7 @@ void focusout(MwWidget handle, void* user, void* call){
 static void HandleEvents(void)
 {
 	int b;
-	qboolean dowarp = false;
+	qboolean dowarp = qfalse;
 	int mwx = vid.width/2;
 	int mwy = vid.height/2;
 
@@ -209,7 +209,7 @@ static void IN_DeactivateMouse( void )
 
 	if (mouse_active) {
 		uninstall_grabs();
-		mouse_active = false;
+		mouse_active = qfalse;
 	}
 }
 
@@ -221,7 +221,7 @@ static void IN_ActivateMouse( void )
 	if (!mouse_active) {
 		mx = my = 0; // don't spazz
 		install_grabs();
-		mouse_active = true;
+		mouse_active = qtrue;
 	}
 }
 
@@ -232,7 +232,7 @@ void VID_Shutdown(void)
 	if (win) {
 		MwDestroyWidget(win);
 	}
-	vidmode_active = false;
+	vidmode_active = qfalse;
 	win = NULL;
 }
 
@@ -426,7 +426,7 @@ void VID_Init(unsigned char *palette)
 	char	gldir[MAX_OSPATH];
 	int width = 640, height = 480;
 	unsigned long mask;
-	qboolean fullscreen = true;
+	qboolean fullscreen = qtrue;
 	int MajorVersion, MinorVersion;
 	int actualWidth, actualHeight;
 	MwSizeHints sh;
@@ -443,7 +443,7 @@ void VID_Init(unsigned char *palette)
 
 // set vid parameters
 	if ((i = COM_CheckParm("-window")) != 0)
-		fullscreen = false;
+		fullscreen = qfalse;
 
 	if ((i = COM_CheckParm("-width")) != 0)
 		width = atoi(com_argv[i+1]);
