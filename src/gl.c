@@ -156,6 +156,7 @@ void key(MwWidget handle, void* user, void* call){
 	int k = *(int*)call;
 	k = MilskoToQuakeKey(k);
 	if(k == -0xdead) return;
+	if(k & MwLLKeyMask) return;
 	Key_Event(k, 1);
 }
 
@@ -163,6 +164,7 @@ void keyrelease(MwWidget handle, void* user, void* call){
 	int k = *(int*)call;
 	k = MilskoToQuakeKey(k);
 	if(k == -0xdead) return;
+	if(k & MwLLKeyMask) return;
 	Key_Event(k, 0);
 }
 
