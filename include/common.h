@@ -24,9 +24,6 @@ typedef unsigned char 		byte;
 #define BYTE_DEFINED 1
 #endif
 
-#undef qtrue
-#undef qfalse
-
 typedef enum {qfalse, qtrue}	qboolean;
 
 //============================================================================
