@@ -1,11 +1,3 @@
-#ifdef _WIN32
-#define OEMRESOURCE
-#include <windows.h>
-#else
-#define RGFW_USE_XDL
-#endif
-#define RGFW_OPENGL
-#define RGFW_IMPLEMENTATION
 /*
 Copyright (C) 1996-1997 Id Software, Inc.
 
