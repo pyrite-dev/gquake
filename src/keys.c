@@ -87,6 +87,7 @@ keyname_t keynames[] =
 	{"PGUP", K_PGUP},
 	{"HOME", K_HOME},
 	{"END", K_END},
+	{"SUPER", K_SUPER},
 
 	{"MOUSE1", K_MOUSE1},
 	{"MOUSE2", K_MOUSE2},

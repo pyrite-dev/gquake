@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
+#ifdef USE_MINIAUDIO
 #include <miniaudio.h>
 #define NEW_WAY
 
@@ -37,7 +38,7 @@ int quit = 0;
 unsigned char dma_buffer[BUFFER_SIZE];
 
 ma_event ev;
-ma_mutex mx;
+ma_mutex mutex;
 
 ma_bool8 ready = MA_FALSE;
 
@@ -61,7 +62,7 @@ void data_callback(ma_device* device, void* out, const void* in, ma_uint32 frame
         return;
     }
 
-    ma_mutex_lock(&mx);
+    ma_mutex_lock(&mutex);
 #ifdef NEW_WAY
     if(arrlen(buffer_list) > 0){
 	buffer_t* buf = &buffer_list[0];
@@ -102,7 +103,7 @@ void data_callback(ma_device* device, void* out, const void* in, ma_uint32 frame
     total += bsz / 2;
 #endif
 
-	ma_mutex_unlock(&mx);
+	ma_mutex_unlock(&mutex);
 }
 
 qboolean SNDDMA_Init(void)
@@ -120,7 +121,7 @@ qboolean SNDDMA_Init(void)
 	}
 
 	ma_event_init(&ev);
-	ma_mutex_init(&mx);
+	ma_mutex_init(&mutex);
 
 	shm = &sn;
 	shm->splitbuffer = 0;
@@ -186,7 +187,7 @@ void SNDDMA_Shutdown(void)
 		ma_device_uninit(&device);
 		snd_inited = 0;
 		ma_event_uninit(&ev);
-		ma_mutex_uninit(&mx);
+		ma_mutex_uninit(&mutex);
 	}
 }
 
@@ -213,13 +214,13 @@ void SNDDMA_Submit(void)
 	oldtime = paintedtime;
 
 	buf.buffer = malloc(buf.size);
-	ma_mutex_lock(&mx);
+	ma_mutex_lock(&mutex);
 	memcpy(buf.buffer, dma_buffer, buf.size);
 	arrput(buffer_list, buf);
-	ma_mutex_unlock(&mx);
+	ma_mutex_unlock(&mutex);
 #else
 	ma_event_signal(&ev);
 #endif
 	ready = MA_TRUE;
 }
-
+#endif

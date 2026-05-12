@@ -25,14 +25,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "quakedef.h"
 
-#include <Mw/Milsko.h>
-#include <Mw/Widget/OpenGL.h>
-
 #define WARP_WIDTH              320
 #define WARP_HEIGHT             200
-
-static MwWidget win;
-static MwWidget opengl;
 
 
 unsigned short	d_8to16table[256];
@@ -40,9 +34,10 @@ unsigned		d_8to24table[256];
 unsigned char	d_15to8table[65536];
 
 static qboolean        mouse_avail;
-static qboolean        mouse_active;
-static int   mx, my;
 static int	old_mouse_x, old_mouse_y;
+
+qboolean        mouse_active, fullscreen;
+int   mx, my;
 
 qboolean dgamouse = qfalse;
 qboolean vidmode_ext = qfalse;
@@ -91,94 +86,15 @@ void D_EndDirectRect (int x, int y, int width, int height)
 
 static void install_grabs(void)
 {
-	MwHideCursor(opengl);
-	MwGrabPointer(opengl, 1);
+	Port_GrabPointer(1);
 	mouse_active = qtrue;
 }
 
 static void uninstall_grabs(void)
 {
-	if (!win)
-		return;
-
-	MwGrabPointer(opengl, 0);
+	Port_GrabPointer(0);
 
 	mouse_active = qfalse;
-}
-
-static int MilskoToQuakeKey(int key){
-	if(key == MwKEY_ENTER) key = K_ENTER;
-	if(key == MwKEY_ESCAPE) key = K_ESCAPE;
-	if(key == MwKEY_BACKSPACE) key = K_BACKSPACE;
-	if(key == MwKEY_LEFT) key = K_LEFTARROW;
-	if(key == MwKEY_RIGHT) key = K_RIGHTARROW;
-	if(key == MwKEY_UP) key = K_UPARROW;
-	if(key == MwKEY_DOWN) key = K_DOWNARROW;
-	if(key == MwKEY_LEFTSHIFT) key = K_SHIFT;
-	if(key == MwKEY_RIGHTSHIFT) key = K_SHIFT;
-
-	if('A' <= key && key <= 'Z') return tolower(key);
-
-	return key;
-}
-
-static int MilskoToQuakeMouse(int btn){
-	int b = 0;
-	if(btn == MwMOUSE_LEFT) b = 0;
-	if(btn == MwMOUSE_MIDDLE) b = 2;
-	if(btn == MwMOUSE_RIGHT) b = 1;
-	if(btn == MwMOUSE_WHEELUP) return K_MWHEELUP;
-	if(btn == MwMOUSE_WHEELDOWN) return K_MWHEELDOWN;
-
-	return K_MOUSE1 + b;
-}
-
-void mousemove(MwWidget handle, void* user, void* call) {
-	MwPoint* p = call;
-	int vecX = p->x;
-	int vecY = p->y;
-
-	if (mouse_active) {
-		mx += vecX * 2;
-		my += vecY * 2;
-	}
-}
-
-void key(MwWidget handle, void* user, void* call){
-	int k = *(int*)call;
-	k = MilskoToQuakeKey(k);
-	if(k == -0xdead) return;
-	if(k & MwKEY_FLAG) return;
-	Key_Event(k, 1);
-}
-
-void keyrelease(MwWidget handle, void* user, void* call){
-	int k = *(int*)call;
-	k = MilskoToQuakeKey(k);
-	if(k == -0xdead) return;
-	if(k & MwKEY_FLAG) return;
-	Key_Event(k, 0);
-}
-
-void mousedown(MwWidget handle, void* user, void* call){
-	MwMouse* m = call;
-	Key_Event(MilskoToQuakeMouse(m->button), 1);
-}
-
-void mouseup(MwWidget handle, void* user, void* call){
-	MwMouse* m = call;
-	Key_Event(MilskoToQuakeMouse(m->button), 0);
-}
-
-void focusin(MwWidget handle, void* user, void* call){
-	if(mouse_active){
-		MwGrabPointer(opengl, 0);
-		MwGrabPointer(opengl, 1);
-	}
-}
-
-void focusout(MwWidget handle, void* user, void* call){
-	MwGrabPointer(opengl, 0);
 }
 
 static void HandleEvents(void)
@@ -188,7 +104,7 @@ static void HandleEvents(void)
 	int mwx = vid.width/2;
 	int mwy = vid.height/2;
 
-	if(MwPending(win)) MwStep(win);
+	Port_Step();
 
 	if (dowarp) {
 		/* move the mouse to the window center again */
@@ -198,7 +114,7 @@ static void HandleEvents(void)
 
 static void IN_DeactivateMouse( void )
 {
-	if (!mouse_avail || !win)
+	if (!mouse_avail)
 		return;
 
 	if (mouse_active) {
@@ -209,7 +125,7 @@ static void IN_DeactivateMouse( void )
 
 static void IN_ActivateMouse( void )
 {
-	if (!mouse_avail || !win)
+	if (!mouse_avail)
 		return;
 
 	if (!mouse_active) {
@@ -223,11 +139,8 @@ static void IN_ActivateMouse( void )
 void VID_Shutdown(void)
 {
 	IN_DeactivateMouse();
-	if (win) {
-		MwDestroyWidget(win);
-	}
+	Port_Shutdown();
 	vidmode_active = qfalse;
-	win = NULL;
 }
 
 void signal_handler(int sig)
@@ -377,7 +290,7 @@ void GL_BeginRendering (int *x, int *y, int *width, int *height)
 void GL_EndRendering (void)
 {
 	glFlush();
-	MwOpenGLSwapBuffer(opengl);
+	Port_SwapBuffer();
 }
 
 qboolean VID_Is8bit(void)
@@ -420,11 +333,10 @@ void VID_Init(unsigned char *palette)
 	char	gldir[MAX_OSPATH];
 	int width = 640, height = 480;
 	unsigned long mask;
-	qboolean fullscreen = qtrue;
 	int MajorVersion, MinorVersion;
 	int actualWidth, actualHeight;
-	MwSizeHints sh;
-	MwWidget label;
+
+	fullscreen = qtrue;
 
 	mouse_avail = 1;
 
@@ -432,8 +344,6 @@ void VID_Init(unsigned char *palette)
 	vid.maxwarpheight = WARP_HEIGHT;
 	vid.colormap = host_colormap;
 	vid.fullbright = 256 - LittleLong (*((int *)vid.colormap + 2048));
-
-	MwLibraryInit();
 
 // interpret command-line params
 
@@ -465,33 +375,7 @@ void VID_Init(unsigned char *palette)
 	if (vid.conheight < 200)
 		vid.conheight = 200;
 
-	win = MwVaCreateWidget(MwWindowClass, "Quake", NULL, MwDEFAULT, MwDEFAULT, width, height + 24,
-		MwNtitle, "Quake",
-	NULL);
-	label = MwVaCreateWidget(MwLabelClass, "Label", win, 0, height, width, 24,
-		MwNtext, "Milsko Quake!",
-	NULL);
-	opengl = MwCreateWidget(MwOpenGLClass, "OpenGL", win, 0, 0, width, height);
-
-	sh.min_width = sh.max_width = width;
-	sh.min_height = sh.max_height = height + 24;
-	MwVaApply(win,
-		MwNsizeHints, &sh,
-	NULL);
-
-	MwOpenGLMakeCurrent(opengl);
-
-	MwAddUserHandler(opengl, MwNmouseMoveHandler, mousemove, NULL);
-	MwAddUserHandler(opengl, MwNkeyHandler, key, NULL);
-	MwAddUserHandler(opengl, MwNkeyReleaseHandler, keyrelease, NULL);
-	MwAddUserHandler(opengl, MwNmouseDownHandler, mousedown, NULL);
-	MwAddUserHandler(opengl, MwNmouseUpHandler, mouseup, NULL);
-	MwAddUserHandler(opengl, MwNfocusInHandler, focusin, NULL);
-	MwAddUserHandler(opengl, MwNfocusOutHandler, focusout, NULL);
-
-	if(fullscreen){
-		/* todo */
-	}
+	Port_Init(width, height);
 
 	scr_width = width;
 	scr_height = height;
@@ -510,7 +394,7 @@ void VID_Init(unsigned char *palette)
 
 	GL_Init();
 
-	sprintf (gldir, "%s/mwquake", com_gamedir);
+	sprintf (gldir, "%s/%s", com_gamedir, QUAKE_PREFIX);
 	Sys_mkdir (gldir);
 
 	VID_SetPalette(palette);
@@ -522,7 +406,6 @@ void VID_Init(unsigned char *palette)
 
 void Sys_SendKeyEvents(void)
 {
-	if(win == NULL) return;
 	HandleEvents();
 }
 
@@ -546,9 +429,6 @@ IN_Commands
 */
 void IN_Commands (void)
 {
-	if (!win)
-		return;
-
 	if (vidmode_active || key_dest == key_game)
 		IN_ActivateMouse();
 	else

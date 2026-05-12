@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //#define	GLTEST			// experimental stuff
 
 #define	QUAKE_GAME			// as opposed to utilities
+#define QUAKE_PREFIX "gquake/"
 
 #ifdef _WIN32
 #define OEMRESOURCE
@@ -334,3 +335,23 @@ extern	cvar_t	chase_active;
 void Chase_Init (void);
 void Chase_Reset (void);
 void Chase_Update (void);
+
+#ifdef USE_MILSKO
+#include <Mw/Milsko.h>
+#include <Mw/Widget/OpenGL.h>
+#endif
+
+#ifdef USE_SDL2
+#include <SDL.h>
+#include <SDL_audio.h>
+#include <SDL_opengl.h>
+#endif
+
+extern qboolean        mouse_active, fullscreen;
+extern int   mx, my;
+
+void Port_Init(int width, int height);
+void Port_Step(void);
+void Port_GrabPointer(int toggle);
+void Port_Shutdown(void);
+void Port_SwapBuffer(void);

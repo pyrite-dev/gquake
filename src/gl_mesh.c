@@ -304,8 +304,8 @@ void GL_MakeAliasModelDisplayLists (model_t *m, aliashdr_t *hdr)
 	//
 	// look for a cached version
 	//
-	strcpy (cache, "mwquake/");
-	COM_StripExtension (m->name+strlen("progs/"), cache+strlen("mwquake/"));
+	strcpy (cache, QUAKE_PREFIX);
+	COM_StripExtension (m->name+strlen("progs/"), cache+strlen(QUAKE_PREFIX));
 	strcat (cache, ".ms2");
 
 	COM_FOpenFile (cache, &f);	
