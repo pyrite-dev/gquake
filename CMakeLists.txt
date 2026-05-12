@@ -48,11 +48,13 @@ elseif(VITA)
 	vita_create_vpk(gquake.vpk PYRT10000 gquake.self
 		FILE ${CMAKE_SOURCE_DIR}/id1 sce_sys/id1
 	)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	target_link_libraries(gquake PRIVATE wsock32)
 else()
 	target_link_libraries(gquake PRIVATE m)
 endif()
 
-set(FOUND OFF)
+set(FOUND FALSE)
 
 if(NOT FOUND AND TRY_SDL2)
 	find_package(SDL2)

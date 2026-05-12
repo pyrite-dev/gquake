@@ -15,7 +15,7 @@ static int MilskoToQuakeKey(int key){
 	if(key == MwKEY_LEFTSHIFT) key = K_SHIFT;
 	if(key == MwKEY_RIGHTSHIFT) key = K_SHIFT;
 	if(key == MwKEY_ALT) key = K_ALT;
-	if(key == MwKEY_CONTROL) key = K_CONTROL;
+	if(key == MwKEY_CONTROL) key = K_CTRL;
 
 	if('A' <= key && key <= 'Z') return tolower(key);
 

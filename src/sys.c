@@ -13,7 +13,6 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <ctype.h>
-#include <sys/wait.h>
 #include <errno.h>
 
 #include "quakedef.h"
@@ -188,7 +187,11 @@ int	Sys_FileTime (char *path)
 
 void Sys_mkdir (char *path)
 {
+#ifdef _WIN32
+    mkdir (path);
+#else
     mkdir (path, 0777);
+#endif
 }
 
 int Sys_FileOpenRead (char *path, int *handle)
