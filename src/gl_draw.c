@@ -391,7 +391,7 @@ void Draw_Init (void)
 		Cvar_Set ("gl_max_size", "256");
 
 #ifdef _PSP
-	Cvar_Set("gl_max_size", "512");
+	Cvar_Set("gl_max_size", "256");
 #endif
 
 	Cmd_AddCommand ("gl_texturemode", &Draw_TextureMode_f);
@@ -410,7 +410,7 @@ void Draw_Init (void)
 
 	start = Hunk_LowMark();
 
-	cb = (qpic_t *)COM_LoadTempFile ("gfx/conback.lmp");	
+	cb = (qpic_t *)COM_LoadTempFile ("gfx/conback.lmp");
 	if (!cb)
 		Sys_Error ("Couldn't load gfx/conback.lmp");
 	SwapPic (cb);
@@ -1011,6 +1011,7 @@ GL_Upload32
 void GL_Upload32 (unsigned *data, int width, int height,  qboolean mipmap, qboolean alpha)
 {
 	int			samples;
+	int samples2;
 static	unsigned	scaled[1024*512];	// [512*256];
 	int			scaled_width, scaled_height;
 
@@ -1058,7 +1059,29 @@ static	unsigned	scaled[1024*512];	// [512*256];
 	else
 		GL_ResampleTexture (data, width, height, scaled, scaled_width, scaled_height);
 
-	glTexImage2D (GL_TEXTURE_2D, samples, samples, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
+#ifdef _PSP
+	if(samples == GL_RGB){
+		unsigned old[1024 * 512];
+		unsigned char* b = (unsigned char*)scaled;
+		unsigned char* ob = (unsigned char*)old;
+		int i;
+
+		memcpy(old, scaled, sizeof(scaled));
+
+		for(i = 0; i < scaled_width * scaled_height; i++){
+			int j;
+			for(j = 0; j < 3; j++){
+				b[i * 3 + j] = ob[i * 4 + j];
+			}
+		}
+
+		samples2 = samples;
+	}
+#else
+	samples2 = GL_RGBA;
+#endif
+
+	glTexImage2D (GL_TEXTURE_2D, 0, samples, scaled_width, scaled_height, 0, samples2, GL_UNSIGNED_BYTE, scaled);
 	if (mipmap)
 	{
 		int		miplevel;
